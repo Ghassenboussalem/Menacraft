@@ -1,0 +1,17 @@
+{
+  "name": "sara7a",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MenaCraft — Instagram Verification System with AI Pipeline",
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail false -n SERVER,CLIENT,PYTHON -c green,cyan,magenta \"npm run dev --prefix server\" \"npm run dev --prefix client\" \"python -X utf8 server/python/app.py\"",
+    "dev:no-python": "concurrently -n SERVER,CLIENT -c green,cyan \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm run build --prefix client",
+    "start": "npm run start --prefix server",
+    "install:all": "npm install && npm install --prefix client && npm install --prefix server",
+    "install:python": "pip install -r server/python/requirements.txt"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

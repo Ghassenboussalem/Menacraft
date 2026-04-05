@@ -1,0 +1,130 @@
+
+================================================================================
+Timestamp: 2026-04-05T08:35:13.921Z
+Username: @suspicious_bot_123
+Prediction: BOT | Ground Truth: BOT
+Result: ✓ CORRECT | Reward: +1
+Bot Score: 85/100
+
+Agent Scores:
+  - Bot Pattern Detector: BAD (weight: 0.100) - Bot score: 85/100 - High bot probability
+  - Source Credibility: WARN (weight: 0.080) - Low credibility - Mixed signals
+  - Image Forensics: OK (weight: 0.200) - No manipulation detected
+  - Reverse Image Search: OK (weight: 0.180) - No prior reuse detected
+
+Weight Adjustments:
+  - Bot Pattern Detector: 0.100 → 0.110 (+0.0100)
+  - Source Credibility: 0.080 → 0.080 (0.0000)
+  - Image Forensics: 0.200 → 0.200 (0.0000)
+  - Reverse Image Search: 0.180 → 0.180 (0.0000)
+================================================================================
+
+================================================================================
+Timestamp: 2026-04-05T08:35:13.934Z
+Username: @real_user_456
+Prediction: BOT | Ground Truth: REAL
+Result: ✗ INCORRECT | Reward: -1
+Bot Score: 72/100
+
+Agent Scores:
+  - Bot Pattern Detector: BAD (weight: 0.109) - Bot score: 72/100 - Suspicious patterns
+  - Source Credibility: WARN (weight: 0.079) - Low engagement metrics
+  - Image Forensics: OK (weight: 0.198) - Authentic images
+  - Caption–Image Alignment: OK (weight: 0.119) - Strong alignment
+
+Weight Adjustments:
+  - Bot Pattern Detector: 0.109 → 0.099 (-0.0100)
+  - Source Credibility: 0.079 → 0.079 (0.0000)
+  - Image Forensics: 0.198 → 0.198 (0.0000)
+  - Caption–Image Alignment: 0.119 → 0.119 (0.0000)
+================================================================================
+
+================================================================================
+Timestamp: 2026-04-05T08:35:13.942Z
+Username: @verified_user_789
+Prediction: REAL | Ground Truth: REAL
+Result: ✓ CORRECT | Reward: +1
+Bot Score: 25/100
+
+Agent Scores:
+  - Bot Pattern Detector: OK (weight: 0.100) - Bot score: 25/100 - Organic behavior
+  - Source Credibility: OK (weight: 0.080) - High credibility signals
+  - Image Forensics: OK (weight: 0.200) - Authentic content
+  - Reverse Image Search: OK (weight: 0.180) - Original images
+
+Weight Adjustments:
+  - Bot Pattern Detector: 0.100 → 0.110 (+0.0100)
+  - Source Credibility: 0.080 → 0.090 (+0.0100)
+  - Image Forensics: 0.200 → 0.210 (+0.0100)
+  - Reverse Image Search: 0.180 → 0.190 (+0.0100)
+================================================================================
+
+================================================================================
+Timestamp: 2026-04-05T08:35:13.949Z
+Username: @bot_account_1
+Prediction: BOT | Ground Truth: BOT
+Result: ✓ CORRECT | Reward: +1
+Bot Score: 90/100
+
+Agent Scores:
+  - Bot Pattern Detector: BAD (weight: 0.106) - Bot score: 90/100
+
+Weight Adjustments:
+  - Bot Pattern Detector: 0.106 → 0.116 (+0.0100)
+================================================================================
+
+================================================================================
+Timestamp: 2026-04-05T08:35:13.956Z
+Username: @bot_account_2
+Prediction: BOT | Ground Truth: BOT
+Result: ✓ CORRECT | Reward: +1
+Bot Score: 88/100
+
+Agent Scores:
+  - Bot Pattern Detector: BAD (weight: 0.115) - Bot score: 88/100
+
+Weight Adjustments:
+  - Bot Pattern Detector: 0.115 → 0.125 (+0.0100)
+================================================================================
+
+================================================================================
+Timestamp: 2026-04-05T08:35:13.962Z
+Username: @real_account_1
+Prediction: REAL | Ground Truth: REAL
+Result: ✓ CORRECT | Reward: +1
+Bot Score: 20/100
+
+Agent Scores:
+  - Bot Pattern Detector: OK (weight: 0.123) - Bot score: 20/100
+
+Weight Adjustments:
+  - Bot Pattern Detector: 0.123 → 0.133 (+0.0100)
+================================================================================
+
+================================================================================
+Timestamp: 2026-04-05T08:35:13.967Z
+Username: @real_account_2
+Prediction: REAL | Ground Truth: REAL
+Result: ✓ CORRECT | Reward: +1
+Bot Score: 15/100
+
+Agent Scores:
+  - Bot Pattern Detector: OK (weight: 0.132) - Bot score: 15/100
+
+Weight Adjustments:
+  - Bot Pattern Detector: 0.132 → 0.142 (+0.0100)
+================================================================================
+
+================================================================================
+Timestamp: 2026-04-05T08:35:13.971Z
+Username: @false_negative
+Prediction: REAL | Ground Truth: BOT
+Result: ✗ INCORRECT | Reward: -1
+Bot Score: 45/100
+
+Agent Scores:
+  - Bot Pattern Detector: WARN (weight: 0.141) - Bot score: 45/100
+
+Weight Adjustments:
+  - Bot Pattern Detector: 0.141 → 0.141 (0.0000)
+================================================================================

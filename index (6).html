@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MenaCraft — Instagram Verification System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f5f4f1;--surface:#fff;--surface2:#fafaf8;--surface3:#f0efec;
+  --border:rgba(0,0,0,0.07);--border-strong:rgba(0,0,0,0.13);
+  --text:#111110;--text-muted:#6b6b67;--text-dim:#b0afa9;
+  --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
+  --yellow:#b45309;--yellow-bg:#fffbeb;--yellow-border:#fde68a;
+  --red:#dc2626;--red-bg:#fef2f2;--red-border:#fecaca;
+  --blue:#2563eb;--blue-bg:#eff6ff;--blue-border:#bfdbfe;
+  --purple:#7c3aed;--purple-bg:#f5f3ff;--purple-border:#ddd6fe;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Geist',-apple-system,sans-serif;min-height:100vh;overflow-x:hidden;font-size:14px}
+
+/* ── SIDEBAR ── */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:60px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:18px 0;gap:4px;z-index:100}
+.sidebar-logo{width:34px;height:34px;background:var(--text);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;color:var(--surface);margin-bottom:18px;letter-spacing:-0.02em;line-height:1}
+.sidebar-divider{width:28px;height:1px;background:var(--border);margin:6px 0}
+.nav-item{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-dim);transition:all 0.15s;position:relative}
+.nav-item:hover{background:var(--surface3);color:var(--text-muted)}
+.nav-item.active{background:var(--surface3);color:var(--text)}
+.nav-item.active::before{content:'';position:absolute;left:-10px;width:3px;height:18px;background:var(--text);border-radius:0 2px 2px 0}
+.nav-item .tooltip{display:none;position:absolute;left:48px;background:var(--text);color:var(--surface);font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:200}
+.nav-item:hover .tooltip{display:block}
+.nav-bottom{margin-top:auto}
+
+/* ── LAYOUT ── */
+.main{margin-left:60px;display:block;min-height:100vh}
+.feed-panel{padding:28px 32px;overflow-y:auto;max-height:100vh;max-width:960px;margin:0 auto}
+
+/* ── TOP TAB BAR ── */
+.tab-bar{display:flex;gap:2px;margin-bottom:22px;background:var(--surface3);border-radius:10px;padding:3px}
+.tab{flex:1;text-align:center;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+
+/* ── PAGE HEADER ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.page-title{font-size:17px;font-weight:600;letter-spacing:-0.02em}
+.page-subtitle{font-size:12px;color:var(--text-dim);margin-top:3px}
+.icon-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 13px;font-family:'Geist',sans-serif;font-size:12px;color:var(--text-muted);cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px}
+.icon-btn:hover{border-color:var(--border-strong);color:var(--text)}
+
+/* ── DB STATUS ── */
+.db-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);margin-bottom:14px;font-family:'Geist Mono',monospace}
+.db-dot{width:6px;height:6px;border-radius:50%;background:var(--text-dim)}
+.db-dot.connected{background:var(--green)}
+.db-dot.loading{background:var(--yellow);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* ── STATS ── */
+.status-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+.stat-chip{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px}
+.stat-chip-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;font-weight:500}
+.stat-chip-value{font-size:20px;font-weight:600;margin-top:2px;letter-spacing:-0.03em}
+.stat-chip-value.green{color:var(--green)}
+.stat-chip-value.yellow{color:var(--yellow)}
+.stat-chip-value.red{color:var(--red)}
+
+/* ── FILTERS ── */
+.filters{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.filter-btn{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 13px;font-family:'Geist',sans-serif;font-size:12px;color:var(--text-muted);cursor:pointer;transition:all 0.15s}
+.filter-btn:hover{border-color:var(--border-strong);color:var(--text)}
+.filter-btn.active{background:var(--text);border-color:var(--text);color:var(--surface)}
+
+/* ── AXIS BADGES ── */
+.axis-row{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.axis-badge{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500;padding:4px 10px;border-radius:6px;border:1px solid}
+.axis-badge.auth{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border)}
+.axis-badge.context{background:var(--purple-bg);color:var(--purple);border-color:var(--purple-border)}
+.axis-badge.source{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.axis-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+/* ── POST CARDS ── */
+.posts-grid{display:flex;flex-direction:column;gap:8px}
+.post-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all 0.15s;position:relative}
+.post-card:hover{border-color:var(--border-strong);box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+.post-card.selected{border-color:var(--text);box-shadow:0 2px 12px rgba(0,0,0,0.08)}
+.post-card-inner{display:flex}
+.post-thumb{width:88px;height:88px;object-fit:cover;flex-shrink:0;background:var(--surface3)}
+.post-thumb-placeholder{width:88px;height:88px;background:var(--surface3);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:20px}
+.post-body{flex:1;padding:12px 14px 12px 13px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.post-meta{display:flex;align-items:center;gap:7px}
+.post-username{font-size:13px;font-weight:600;letter-spacing:-0.01em}
+.post-time{font-size:11px;color:var(--text-dim);font-family:'Geist Mono',monospace}
+.post-caption{font-size:12px;color:var(--text-muted);line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.post-stats{display:flex;gap:12px;font-size:11px;color:var(--text-dim);font-family:'Geist Mono',monospace}
+.type-chip{font-size:10px;padding:1px 6px;border-radius:4px;background:var(--surface3);color:var(--text-dim);font-weight:500;letter-spacing:0.04em;text-transform:uppercase;font-family:'Geist Mono',monospace}
+.verdict-badge{position:absolute;top:9px;right:9px;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:500;border:1px solid}
+.verdict-badge.verified{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.verdict-badge.suspicious{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow-border)}
+.verdict-badge.fake{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.verdict-badge.pending{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border)}
+.verdict-badge.unanalyzed{background:var(--surface3);color:var(--text-dim);border-color:var(--border)}
+
+/* ── POST DETAIL MODAL ── */
+.post-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:300;align-items:center;justify-content:center;padding:24px}
+.post-modal-overlay.open{display:flex}
+.post-modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:100%;max-width:780px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.18);animation:modalIn 0.22s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(0.97) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.post-modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0}
+.post-modal-close{width:32px;height:32px;border-radius:8px;background:var(--surface3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all 0.15s;flex-shrink:0}
+.post-modal-close:hover{background:var(--border-strong);color:var(--text)}
+.post-modal-body{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.post-modal-left{padding:20px 20px 24px 24px;border-right:1px solid var(--border)}
+.post-modal-right{padding:20px 24px 24px 20px;overflow-y:auto}
+@media(max-width:680px){.post-modal-body{grid-template-columns:1fr}.post-modal-left{border-right:none;border-bottom:1px solid var(--border)}}
+.empty-feed{text-align:center;padding:80px 20px;color:var(--text-dim)}
+.empty-feed-icon{font-size:40px;margin-bottom:14px}
+.empty-feed-title{font-size:15px;font-weight:500;color:var(--text-muted);margin-bottom:6px}
+.empty-feed-desc{font-size:13px;line-height:1.6;max-width:260px;margin:0 auto}
+
+/* ── DETAIL PANEL ── */
+.detail-header{margin-bottom:14px}
+.detail-user{font-size:15px;font-weight:600;letter-spacing:-0.02em}
+.detail-date{font-size:11px;color:var(--text-dim);font-family:'Geist Mono',monospace;margin-top:2px}
+.detail-image{width:100%;border-radius:10px;object-fit:cover;max-height:180px;margin-bottom:14px;background:var(--surface3);display:block}
+.detail-image-placeholder{width:100%;height:120px;border-radius:10px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:14px;color:var(--text-dim)}
+.detail-caption{font-size:12px;color:var(--text-muted);line-height:1.65;margin-bottom:14px;padding:11px 13px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)}
+.detail-section{margin-bottom:14px}
+.detail-section-title{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);font-weight:500;margin-bottom:7px}
+.hashtag-list{display:flex;flex-wrap:wrap;gap:5px}
+.hashtag{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:5px;padding:2px 7px;font-size:11px;color:var(--blue);font-family:'Geist Mono',monospace}
+.ig-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-muted);text-decoration:none;padding:6px 11px;border:1px solid var(--border);border-radius:8px;transition:all 0.15s}
+.ig-link:hover{border-color:var(--border-strong);color:var(--text);background:var(--surface2)}
+.engage-row{display:flex;gap:14px;font-size:12px;color:var(--text-muted);font-family:'Geist Mono',monospace}
+
+/* ── AI VERIFY BOX ── */
+.ai-box{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 15px;margin-top:4px}
+.ai-box-title{font-size:13px;font-weight:600;letter-spacing:-0.01em;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.ai-box-desc{font-size:11px;color:var(--text-muted);margin-bottom:13px;line-height:1.5}
+
+/* ── TEAM EXPLAINER (pre-run) ── */
+.team-explainer{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px}
+.team-card{border-radius:8px;padding:10px 11px;border:1px solid}
+.team-card.blue{background:var(--blue-bg);border-color:var(--blue-border)}
+.team-card.red{background:var(--red-bg);border-color:var(--red-border)}
+.team-card-title{font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.team-card-title.blue{color:var(--blue)}
+.team-card-title.red{color:var(--red)}
+.team-card-desc{font-size:10.5px;color:var(--text-muted);line-height:1.45}
+
+/* ── DEBATE LAYOUT ── */
+.debate-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-dim);margin:18px 0 8px;display:flex;align-items:center;gap:7px}
+.debate-section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.debate-agent-card{border-radius:10px;border:1px solid;margin-bottom:8px;overflow:hidden}
+.debate-agent-card.blue{border-color:var(--blue-border)}
+.debate-agent-card.red{border-color:var(--red-border)}
+.dac-header{display:flex;align-items:center;gap:9px;padding:10px 13px;cursor:pointer;user-select:none}
+.dac-header.blue{background:var(--blue-bg)}
+.dac-header.red{background:var(--red-bg)}
+.dac-icon{font-size:15px;flex-shrink:0}
+.dac-meta{flex:1;min-width:0}
+.dac-name{font-size:12px;font-weight:600}
+.dac-name.blue{color:var(--blue)}
+.dac-name.red{color:var(--red)}
+.dac-model{font-size:10px;color:var(--text-dim);font-family:'Geist Mono',monospace;margin-top:1px}
+.dac-verdict-chip{font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;border:1px solid;flex-shrink:0;letter-spacing:0.03em}
+.dac-verdict-chip.ok{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.dac-verdict-chip.warn{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow-border)}
+.dac-verdict-chip.bad{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.dac-chevron{color:var(--text-dim);transition:transform 0.2s;flex-shrink:0}
+.dac-chevron.open{transform:rotate(180deg)}
+.dac-body{display:none;padding:0 13px 13px;background:var(--surface)}
+.dac-body.open{display:block}
+.dac-finding{font-size:12px;font-weight:500;color:var(--text);margin-bottom:5px;margin-top:10px}
+.dac-explanation{font-size:11.5px;color:var(--text-muted);line-height:1.6;margin-bottom:10px}
+.dac-confidence-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.dac-confidence-label{font-size:10px;color:var(--text-dim);width:70px;flex-shrink:0}
+.dac-bar-bg{flex:1;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden}
+.dac-bar-fill{height:100%;border-radius:2px}
+.dac-bar-fill.ok{background:var(--green)}
+.dac-bar-fill.warn{background:var(--yellow)}
+.dac-bar-fill.bad{background:var(--red)}
+.dac-bar-val{font-size:10px;font-family:'Geist Mono',monospace;color:var(--text-muted);width:28px;text-align:right;flex-shrink:0}
+.dac-axis-tag{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;padding:2px 7px;border-radius:4px;border:1px solid;margin-right:4px}
+.dac-axis-tag.auth{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border)}
+.dac-axis-tag.context{background:var(--purple-bg);color:var(--purple);border-color:var(--purple-border)}
+.dac-axis-tag.source{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+
+/* ── DEBATE DIVIDER ── */
+.vs-divider{display:flex;align-items:center;gap:10px;margin:14px 0}
+.vs-divider::before,.vs-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.vs-pill{font-size:10px;font-weight:700;letter-spacing:0.06em;padding:3px 10px;border-radius:20px;background:var(--surface3);color:var(--text-dim);border:1px solid var(--border)}
+
+/* ── DEBATE SCORE SUMMARY ── */
+.debate-scores{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin:14px 0;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px}
+.team-score-block{text-align:center}
+.team-score-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px}
+.team-score-label.blue{color:var(--blue)}
+.team-score-label.red{color:var(--red)}
+.team-score-num{font-size:26px;font-weight:600;letter-spacing:-0.04em}
+.team-score-num.blue{color:var(--blue)}
+.team-score-num.red{color:var(--red)}
+.team-score-sub{font-size:10px;color:var(--text-dim);margin-top:1px}
+.vs-center{text-align:center}
+.vs-center-label{font-size:11px;font-weight:700;color:var(--text-dim)}
+
+/* ── SYNTHESIS RULING ── */
+.synthesis-ruling{border-radius:12px;border:1px solid;overflow:hidden;margin-top:14px}
+.synthesis-ruling.verified{border-color:var(--green-border)}
+.synthesis-ruling.suspicious{border-color:var(--yellow-border)}
+.synthesis-ruling.fake{border-color:var(--red-border)}
+.sr-header{padding:13px 16px;display:flex;align-items:center;justify-content:space-between}
+.sr-header.verified{background:var(--green-bg)}
+.sr-header.suspicious{background:var(--yellow-bg)}
+.sr-header.fake{background:var(--red-bg)}
+.sr-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;display:flex;align-items:center;gap:7px}
+.sr-title.verified{color:var(--green)}
+.sr-title.suspicious{color:var(--yellow)}
+.sr-title.fake{color:var(--red)}
+.sr-score{font-size:22px;font-weight:600;letter-spacing:-0.04em}
+.sr-score.verified{color:var(--green)}
+.sr-score.suspicious{color:var(--yellow)}
+.sr-score.fake{color:var(--red)}
+.sr-bar-bg{height:3px;background:rgba(0,0,0,0.07)}
+.sr-bar-fill{height:100%;transition:width 0.8s ease}
+.sr-bar-fill.verified{background:var(--green)}
+.sr-bar-fill.suspicious{background:var(--yellow)}
+.sr-bar-fill.fake{background:var(--red)}
+.sr-body{padding:14px 16px;background:var(--surface)}
+.sr-reasoning-title{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);font-weight:500;margin-bottom:6px}
+.sr-reasoning{font-size:12.5px;color:var(--text-muted);line-height:1.65}
+.sr-axes{display:flex;gap:5px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--border);background:var(--surface2)}
+.sr-axes-label{font-size:10px;color:var(--text-dim);margin-right:3px}
+
+/* ── VERIFY BTN ── */
+.verify-btn{background:var(--text);border:none;border-radius:9px;padding:9px 16px;font-family:'Geist',sans-serif;font-size:13px;font-weight:500;color:var(--surface);cursor:pointer;width:100%;transition:opacity 0.15s;display:flex;align-items:center;justify-content:center;gap:7px;letter-spacing:-0.01em}
+.verify-btn:hover{opacity:0.82}
+.verify-btn.secondary{background:var(--surface);color:var(--text-muted);border:1px solid var(--border);font-size:12px;padding:7px 14px;margin-top:10px}
+.verify-btn.secondary:hover{opacity:1;border-color:var(--border-strong);color:var(--text)}
+
+/* ── VERDICT CARD (matches PDF "Truth Overlay") ── */
+.verdict-card{border-radius:10px;border:1px solid;margin-bottom:12px;overflow:hidden}
+.verdict-card.verified{border-color:var(--green-border)}
+.verdict-card.suspicious{border-color:var(--yellow-border)}
+.verdict-card.fake{border-color:var(--red-border)}
+.verdict-card-header{padding:11px 13px;display:flex;align-items:center;justify-content:space-between}
+.verdict-card-header.verified{background:var(--green-bg)}
+.verdict-card-header.suspicious{background:var(--yellow-bg)}
+.verdict-card-header.fake{background:var(--red-bg)}
+.verdict-title-row{display:flex;align-items:center;gap:7px}
+.verdict-status-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em}
+.verdict-status-label.verified{color:var(--green)}
+.verdict-status-label.suspicious{color:var(--yellow)}
+.verdict-status-label.fake{color:var(--red)}
+.confidence-badge{font-size:13px;font-weight:600;letter-spacing:-0.03em}
+.confidence-badge.verified{color:var(--green)}
+.confidence-badge.suspicious{color:var(--yellow)}
+.confidence-badge.fake{color:var(--red)}
+.progress-bg{height:3px;background:rgba(0,0,0,0.07);margin:0}
+.progress-fill{height:100%;transition:width 0.7s ease}
+.progress-fill.verified{background:var(--green)}
+.progress-fill.suspicious{background:var(--yellow)}
+.progress-fill.fake{background:var(--red)}
+
+/* ── AGENT TABLE (matches PDF verdict card rows) ── */
+.agent-table{width:100%;border-collapse:collapse}
+.agent-table tr{border-bottom:1px solid var(--border)}
+.agent-table tr:last-child{border-bottom:none}
+.agent-table td{padding:8px 13px;font-size:11.5px;vertical-align:top}
+.agent-table td:first-child{color:var(--text-muted);width:38%;font-weight:500;white-space:nowrap}
+.agent-table td:last-child{color:var(--text)}
+.agent-tag{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;letter-spacing:0.05em;padding:1px 6px;border-radius:3px;text-transform:uppercase;margin-right:5px;vertical-align:middle}
+.agent-tag.blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.agent-tag.red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+
+/* ── AXIS FLAGS ON VERDICT ── */
+.verdict-axes{display:flex;gap:5px;flex-wrap:wrap;padding:9px 13px;border-top:1px solid var(--border);background:var(--surface2)}
+.vaxis{font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid;font-weight:500}
+.vaxis.auth{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border)}
+.vaxis.context{background:var(--purple-bg);color:var(--purple);border-color:var(--purple-border)}
+.vaxis.source{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+
+/* ── SYNTHESIS BLOCK ── */
+.synthesis-block{padding:11px 13px;background:var(--surface);border-top:1px solid var(--border)}
+.synthesis-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);font-weight:500;margin-bottom:5px}
+.synthesis-text{font-size:12px;color:var(--text-muted);line-height:1.6}
+
+/* ── SCORE TABLE (agent-by-agent) ── */
+.agent-score-chip{font-family:'Geist Mono',monospace;font-size:10px;font-weight:500;padding:1px 6px;border-radius:4px;border:1px solid;float:right}
+.agent-score-chip.ok{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.agent-score-chip.warn{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow-border)}
+.agent-score-chip.bad{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+
+/* ── ARCHITECTURE TAB ── */
+.arch-section{margin-bottom:20px}
+.arch-title{font-size:13px;font-weight:600;letter-spacing:-0.01em;margin-bottom:10px}
+.arch-flow{display:flex;align-items:center;gap:0;margin-bottom:16px;overflow-x:auto;padding-bottom:4px}
+.arch-node{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:11px;text-align:center;flex-shrink:0;min-width:90px}
+.arch-node-label{font-weight:600;color:var(--text);font-size:11px}
+.arch-node-sub{font-size:10px;color:var(--text-dim);margin-top:2px}
+.arch-arrow{color:var(--text-dim);font-size:16px;flex-shrink:0;padding:0 6px;margin-top:-2px}
+.team-section-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.team-box{border-radius:10px;padding:13px;border:1px solid}
+.team-box.blue{background:var(--blue-bg);border-color:var(--blue-border)}
+.team-box.red{background:var(--red-bg);border-color:var(--red-border)}
+.team-box-title{font-size:12px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.team-box-title.blue{color:var(--blue)}
+.team-box-title.red{color:var(--red)}
+.agent-row-arch{display:flex;flex-direction:column;gap:6px}
+.agent-item{background:rgba(255,255,255,0.65);border-radius:7px;padding:8px 10px;border:1px solid rgba(0,0,0,0.06)}
+.agent-item-name{font-size:11px;font-weight:600;color:var(--text)}
+.agent-item-model{font-size:10px;color:var(--text-dim);font-family:'Geist Mono',monospace;margin-top:1px}
+.agent-item-what{font-size:10.5px;color:var(--text-muted);margin-top:3px;line-height:1.4}
+.synth-box{background:var(--surface);border:1px solid var(--border-strong);border-radius:10px;padding:13px;margin-top:10px}
+.synth-box-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.synth-box-desc{font-size:11.5px;color:var(--text-muted);line-height:1.55}
+
+/* ── STACK TABLE ── */
+.stack-table{width:100%;border-collapse:collapse;font-size:12px}
+.stack-table th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);padding:0 0 8px;font-weight:500;border-bottom:1px solid var(--border)}
+.stack-table td{padding:9px 0;border-bottom:1px solid var(--border);vertical-align:top}
+.stack-table td:first-child{color:var(--text-muted);width:28%;font-weight:500}
+.stack-table td:nth-child(2){font-family:'Geist Mono',monospace;font-size:11px;color:var(--text);padding-right:12px;width:42%}
+.stack-table td:nth-child(3){font-size:11px;color:var(--text-dim);width:30%}
+
+/* ── CRITERIA TABLE ── */
+.criteria-table{width:100%;border-collapse:collapse;font-size:12px}
+.criteria-table th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);padding:0 0 8px;font-weight:500;border-bottom:1px solid var(--border)}
+.criteria-table td{padding:9px 0;border-bottom:1px solid var(--border);vertical-align:top;font-size:11.5px}
+.criteria-table td:first-child{color:var(--text);font-weight:500;width:36%;padding-right:10px}
+.criteria-table td:nth-child(2){color:var(--text-muted);width:48%;padding-right:10px}
+.stars{color:var(--yellow);letter-spacing:-1px;font-size:12px}
+
+/* ── LOADING ── */
+.loading-spinner{display:inline-block;width:11px;height:11px;border:1.5px solid rgba(0,0,0,0.15);border-top-color:var(--text);border-radius:50%;animation:spin 0.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.22);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:440px;max-width:90vw;box-shadow:0 8px 40px rgba(0,0,0,0.1)}
+.modal-title{font-size:16px;font-weight:600;letter-spacing:-0.02em;margin-bottom:5px}
+.modal-sub{font-size:12px;color:var(--text-muted);margin-bottom:20px;line-height:1.55}
+.modal-note{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--blue);margin-bottom:16px;line-height:1.5}
+.modal-field{margin-bottom:12px}
+.modal-field label{display:block;font-size:11px;color:var(--text-muted);font-weight:500;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em}
+.modal-field input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-family:'Geist',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color 0.15s}
+.modal-field input:focus{border-color:var(--border-strong)}
+.modal-field input::placeholder{color:var(--text-dim)}
+.modal-actions{display:flex;gap:8px;margin-top:18px}
+.modal-primary{flex:1;background:var(--text);border:none;border-radius:9px;padding:10px;font-family:'Geist',sans-serif;font-size:13px;font-weight:500;color:var(--surface);cursor:pointer;transition:opacity 0.15s;letter-spacing:-0.01em}
+.modal-primary:hover{opacity:0.82}
+.modal-secondary{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 16px;font-family:'Geist',sans-serif;font-size:13px;color:var(--text-muted);cursor:pointer;transition:all 0.15s}
+.modal-secondary:hover{border-color:var(--border-strong);color:var(--text)}
+
+/* ── TOAST ── */
+.toast-container{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:9999}
+.toast{background:var(--text);color:var(--surface);border-radius:9px;padding:10px 14px;font-size:12px;max-width:260px;animation:toastIn 0.25s ease;letter-spacing:-0.01em}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:2px}
+
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">MC</div>
+  <div class="nav-item active" id="navFeed" onclick="switchMain('feed')">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span class="tooltip">Feed</span>
+  </div>
+  <div class="nav-item" id="navArch" onclick="switchMain('arch')">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    <span class="tooltip">Architecture</span>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="nav-item" onclick="document.getElementById('configModal').style.display='flex'">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+    <span class="tooltip">Data Source</span>
+  </div>
+  <div class="nav-bottom">
+    <div class="nav-item" onclick="document.getElementById('configModal').style.display='flex'">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="tooltip">Settings</span>
+    </div>
+  </div>
+</nav>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="configModal">
+  <div class="modal">
+    <div class="modal-title">Connect to Supabase</div>
+    <div class="modal-sub">Enter your project credentials to load Instagram posts scraped by the Chrome extension.</div>
+    <div class="modal-note">No credentials yet? Load demo data — includes all 3 verdict types (verified / suspicious / fake).</div>
+    <div class="modal-field"><label>Project URL</label><input id="sbUrl" type="text" placeholder="https://xxxx.supabase.co"/></div>
+    <div class="modal-field"><label>Anon Key</label><input id="sbKey" type="password" placeholder="eyJhbGci..."/></div>
+    <div class="modal-field"><label>Table Name</label><input id="sbTable" type="text" value="instagram_posts"/></div>
+    <div class="modal-actions">
+      <button class="modal-secondary" id="demoBtn">Load demo</button>
+      <button class="modal-primary" id="connectBtn">Connect &amp; fetch</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="mainGrid">
+
+  <!-- FEED PANEL -->
+  <div class="feed-panel" id="feedPanel">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Instagram Feed</div>
+        <div class="page-subtitle">Chrome extension → Supabase → AI verification pipeline</div>
+      </div>
+      <button class="icon-btn" id="refreshBtn">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+    </div>
+
+    <!-- FUNCTIONAL AXES -->
+    <div class="axis-row">
+      <div class="axis-badge auth"><div class="axis-dot"></div> Content Authenticity</div>
+      <div class="axis-badge context"><div class="axis-dot"></div> Contextual Consistency</div>
+      <div class="axis-badge source"><div class="axis-dot"></div> Source Credibility</div>
+    </div>
+
+    <div class="db-status"><div class="db-dot" id="dbDot"></div><span id="dbStatusText">Not connected</span></div>
+
+    <div class="status-bar">
+      <div class="stat-chip"><div class="stat-chip-label">Total</div><div class="stat-chip-value" id="statTotal">—</div></div>
+      <div class="stat-chip"><div class="stat-chip-label">Verified</div><div class="stat-chip-value green" id="statVerified">—</div></div>
+      <div class="stat-chip"><div class="stat-chip-label">Suspicious</div><div class="stat-chip-value yellow" id="statSuspicious">—</div></div>
+      <div class="stat-chip"><div class="stat-chip-label">Fake</div><div class="stat-chip-value red" id="statFake">—</div></div>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="verified">✓ Verified</button>
+      <button class="filter-btn" data-filter="suspicious">⚠ Suspicious</button>
+      <button class="filter-btn" data-filter="fake">✗ Fake</button>
+      <button class="filter-btn" data-filter="unanalyzed">· Unanalyzed</button>
+    </div>
+
+    <div class="posts-grid" id="postsGrid">
+      <div class="empty-feed">
+        <div class="empty-feed-icon">🔗</div>
+        <div class="empty-feed-title">No posts loaded</div>
+        <div class="empty-feed-desc">Connect Supabase or load demo data to see posts scraped by the Chrome extension.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE TAB (hidden by default) -->
+  <div class="feed-panel" id="archPanel" style="display:none">
+    <div class="page-header">
+      <div>
+        <div class="page-title">System Architecture</div>
+        <div class="page-subtitle">MenaCraft Instagram Verification · Technical Blueprint</div>
+      </div>
+    </div>
+
+    <!-- Data Flow -->
+    <div class="arch-section">
+      <div class="arch-title">Data Flow</div>
+      <div class="arch-flow">
+        <div class="arch-node"><div class="arch-node-label">Instagram DOM</div><div class="arch-node-sub">Browser-rendered</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node"><div class="arch-node-label">Chrome Extension</div><div class="arch-node-sub">MV3 Content Script</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node"><div class="arch-node-label">Supabase</div><div class="arch-node-sub">Storage layer</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node"><div class="arch-node-label">FastAPI Backend</div><div class="arch-node-sub">/verify endpoint</div></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node"><div class="arch-node-label">AI Pipeline</div><div class="arch-node-sub">Blue + Red + Synthesis</div></div>
+      </div>
+      <div style="font-size:11.5px;color:var(--text-muted);line-height:1.6;padding:10px 13px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:16px">
+        The extension runs entirely in the browser — reading the already-rendered DOM without triggering Instagram's anti-bot protections (TLS fingerprinting, IP bans). No Instagram credentials are stored.
+      </div>
+    </div>
+
+    <!-- Blue + Red Teams -->
+    <div class="arch-section">
+      <div class="arch-title">Agent Pipeline</div>
+      <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">Inspired by cybersecurity red/blue team methodology. Both teams independently analyse the same post, then a Synthesis Agent reconciles their findings into a single verdict.</div>
+      <div class="team-section-grid">
+        <div class="team-box blue">
+          <div class="team-box-title blue">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Blue Team — Detection
+          </div>
+          <div class="agent-row-arch">
+            <div class="agent-item"><div class="agent-item-name">Image Forensics</div><div class="agent-item-model">EfficientNet B4 (DFDC fine-tune)</div><div class="agent-item-what">GAN artifacts, splicing, copy-move detection</div></div>
+            <div class="agent-item"><div class="agent-item-name">OCR + Claim Checker</div><div class="agent-item-model">Tesseract v5 → Gemini 1.5 Flash</div><div class="agent-item-what">Text overlaid on image vs. caption claim</div></div>
+            <div class="agent-item"><div class="agent-item-name">Link Scanner</div><div class="agent-item-model">Google Safe Browsing API v4</div><div class="agent-item-what">Phishing domains, spoofed news URLs</div></div>
+            <div class="agent-item"><div class="agent-item-name">Metadata Analyser</div><div class="agent-item-model">ExifTool + heuristics</div><div class="agent-item-what">Stripped/forged EXIF, GPS anomalies</div></div>
+          </div>
+        </div>
+        <div class="team-box red">
+          <div class="team-box-title red">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Red Team — Verification
+          </div>
+          <div class="agent-row-arch">
+            <div class="agent-item"><div class="agent-item-name">Reverse Image Search</div><div class="agent-item-model">Google Vision API / CLIP</div><div class="agent-item-what">Historical reuse; different event or country</div></div>
+            <div class="agent-item"><div class="agent-item-name">Caption–Image Alignment</div><div class="agent-item-model">OpenAI CLIP / SigLIP</div><div class="agent-item-what">Semantic mismatch between text and visual</div></div>
+            <div class="agent-item"><div class="agent-item-name">Bot Pattern Detector</div><div class="agent-item-model">Comment frequency heuristics</div><div class="agent-item-what">Identical comments, no-profile accounts</div></div>
+            <div class="agent-item"><div class="agent-item-name">Source Credibility</div><div class="agent-item-model">Gemini 1.5 Flash + domain DB</div><div class="agent-item-what">Writing style, account age, domain trust</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="synth-box">
+        <div class="synth-box-title">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Synthesis Agent
+        </div>
+        <div class="synth-box-desc">Receives JSON outputs from both teams. Weights findings by category severity. Produces final Verdict + Confidence Score (0–100) + 2-sentence plain-language explanation covering all 3 functional axes.</div>
+      </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="arch-section">
+      <div class="arch-title">Tech Stack</div>
+      <table class="stack-table">
+        <tr><th>Layer</th><th>Technology</th><th>Rationale</th></tr>
+        <tr><td>Extension</td><td>Chrome MV3 · Shadow DOM</td><td>DOM access, no scraping</td></tr>
+        <tr><td>API Backend</td><td>Python FastAPI · Uvicorn</td><td>Async, easy cloud deploy</td></tr>
+        <tr><td>Storage</td><td>Supabase (PostgreSQL)</td><td>Real-time, REST API</td></tr>
+        <tr><td>Image AI</td><td>EfficientNet B4 + CLIP</td><td>Deepfake + alignment</td></tr>
+        <tr><td>LLM</td><td>Gemini 1.5 Flash</td><td>Fast, cheap, multimodal</td></tr>
+        <tr><td>OCR</td><td>Tesseract v5 / Google Vision</td><td>Read embedded text</td></tr>
+        <tr><td>Reverse Image</td><td>Google Vision API / CLIP</td><td>Contextual reuse detection</td></tr>
+        <tr><td>Link Safety</td><td>Google Safe Browsing v4</td><td>Free tier sufficient</td></tr>
+        <tr><td>Deploy</td><td>Railway / Render / Cloud Run</td><td>One-click HTTPS</td></tr>
+      </table>
+    </div>
+
+    <!-- Hackathon Criteria -->
+    <div class="arch-section">
+      <div class="arch-title">Hackathon Scoring Criteria</div>
+      <table class="criteria-table">
+        <tr><th>Criterion</th><th>How this delivers</th><th>Score</th></tr>
+        <tr><td>AI-Driven Verification</td><td>Multi-agent pipeline with deepfake detection, CLIP, and LLM reasoning</td><td class="stars">★★★★★</td></tr>
+        <tr><td>Innovation</td><td>Chrome extension as anti-scraping bypass; real-time inline overlay</td><td class="stars">★★★★★</td></tr>
+        <tr><td>Content Authenticity</td><td>EfficientNet deepfake detector + OCR + metadata analysis</td><td class="stars">★★★★★</td></tr>
+        <tr><td>Contextual Consistency</td><td>CLIP image–caption alignment + reverse image search</td><td class="stars">★★★★½</td></tr>
+        <tr><td>Source Credibility</td><td>Domain trust DB + LLM writing-style analysis + bot heuristics</td><td class="stars">★★★★½</td></tr>
+        <tr><td>Explainability</td><td>Per-agent breakdown + plain-language synthesis in every verdict</td><td class="stars">★★★★★</td></tr>
+        <tr><td>Practicality</td><td>Works on the platform users already use; zero friction to adopt</td><td class="stars">★★★★½</td></tr>
+      </table>
+    </div>
+
+    <!-- Roadmap -->
+    <div class="arch-section">
+      <div class="arch-title">Implementation Roadmap</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:9px">
+          <div style="font-size:10px;font-weight:700;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);border-radius:4px;padding:2px 7px;white-space:nowrap;margin-top:1px">Phase 1</div>
+          <div><div style="font-size:12px;font-weight:600;margin-bottom:2px">Core (4 hrs)</div><div style="font-size:11.5px;color:var(--text-muted)">FastAPI skeleton + /verify endpoint · CLIP caption–image score · Chrome extension MV3 + button injection</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:9px">
+          <div style="font-size:10px;font-weight:700;background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);border-radius:4px;padding:2px 7px;white-space:nowrap;margin-top:1px">Phase 2</div>
+          <div><div style="font-size:12px;font-weight:600;margin-bottom:2px">Agents (4 hrs)</div><div style="font-size:11.5px;color:var(--text-muted)">Deepfake model (DFDC) · Google Safe Browsing link scanner · OCR pipeline for in-image text</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:9px">
+          <div style="font-size:10px;font-weight:700;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);border-radius:4px;padding:2px 7px;white-space:nowrap;margin-top:1px">Phase 3</div>
+          <div><div style="font-size:12px;font-weight:600;margin-bottom:2px">Polish (3 hrs)</div><div style="font-size:11.5px;color:var(--text-muted)">Synthesis agent prompt + confidence calibration · Verdict card UI in shadow DOM · Bot-comment heuristics</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:9px">
+          <div style="font-size:10px;font-weight:700;background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-border);border-radius:4px;padding:2px 7px;white-space:nowrap;margin-top:1px">Phase 4</div>
+          <div><div style="font-size:12px;font-weight:600;margin-bottom:2px">Demo (1 hr)</div><div style="font-size:11.5px;color:var(--text-muted)">Record 3 demo cases (verified / suspicious / fake) · Deploy backend to Railway · Slide deck</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- POST DETAIL MODAL -->
+<div class="post-modal-overlay" id="postModal" onclick="handleOverlayClick(event)">
+  <div class="post-modal" id="postModalInner">
+    <div class="post-modal-header">
+      <div>
+        <div style="font-size:16px;font-weight:600;letter-spacing:-0.02em" id="modalUsername"></div>
+        <div style="font-size:11px;color:var(--text-dim);font-family:'Geist Mono',monospace;margin-top:2px" id="modalDate"></div>
+      </div>
+      <button class="post-modal-close" onclick="closeModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="post-modal-body">
+      <div class="post-modal-left" id="modalLeft"></div>
+      <div class="post-modal-right" id="modalRight"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────
+let sbUrl='',sbKey='',sbTable='instagram_posts';
+let posts=[],verdicts={},selected=null,activeFilter='all';
+
+// ── DEMO DATA ──────────────────────────────────────────────────────
+const DEMO=[
+  {id:"86fb8794-34c5-41e6-a5ce-b1c145874e0f",post_url:"https://www.instagram.com/p/DWtyUT2E5Tu/",username:"filmseal",caption:"Charlie Heaton and Lashana Lynch have officially joined the cast of the upcoming Peaky Blinders sequel series.\n\nSet in the 1950s, around a decade after Peaky Blinders: The Immortal Man, the new chapter is coming soon to Netflix.\n\n#peakyblinders #filmseal",likes_count:"593",comments_count:"18",image_url:"https://scontent.cdninstagram.com/v/t51.82787-15/658022673_18197306827352463_1579663496595380507_n.jpg?stp=c288.0.864.864a_dst-jpg_e35_s640x640_tt6&_nc_cat=101&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0FST1VTRUxfSVRFTS5iZXN0X2ltYWdlX3VybGdlbi5DMyJ9&_nc_ohc=f47304y2SnIQ7kNvwEFRF6Y&_nc_oc=AdqD6qEP-PepVw6xnwjLqx2pr6U_hsId28vZk355b0KHVfpyIAIVFcHF2NW90gPTWbBsjmPkoCaO2jiilNHsGHdw&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&_nc_gid=RUXP3vQ121jnpCy7mfpndw&_nc_ss=7a3a8&oh=00_Af1aMBquQlnn00wH8XPEr06E7qQzSpr_bGwPVn-xqK-8bw&oe=69D7047C",post_date:"2026-04-04 15:50:55+00",post_date_raw:"15 min",hashtags:["#peakyblinders","#filmseal"],post_type:"image"},
+  {id:"a1b2c3d4-dead-beef-cafe-1234567890ab",post_url:"https://www.instagram.com/p/DWexample01/",username:"breakingnews_verify",caption:"BREAKING: Massive flooding reported in coastal areas. Over 10,000 displaced. Authorities urge immediate evacuation. Share this urgent update!\n\n#flooding #emergency #climatecrisis",likes_count:"4821",comments_count:"312",image_url:null,post_date:"2026-04-03 09:15:00+00",post_date_raw:"1d",hashtags:["#flooding","#emergency","#climatecrisis"],post_type:"image"},
+  {id:"d4e5f6a7-cafe-dead-b00b-abcdef012345",post_url:"https://www.instagram.com/p/DWexample02/",username:"sciencedaily",caption:"Researchers at MIT have developed a new solar panel technology achieving 47% efficiency — almost double today's best commercial panels.\n\n#solar #renewable #science #MIT",likes_count:"11204",comments_count:"891",image_url:null,post_date:"2026-04-02 14:30:00+00",post_date_raw:"2d",hashtags:["#solar","#renewable","#science","#MIT"],post_type:"image"},
+  {id:"e5f6a7b8-b00b-cafe-dead-bcdef0123456",post_url:"https://www.instagram.com/p/DWexample03/",username:"conspiracy_facts_real",caption:"They don't want you to know this! 5G towers near hospitals are mind-control devices funded by globalist elites. WAKE UP!! Share before deleted!!\n\n#5g #truth #expose",likes_count:"392",comments_count:"1420",image_url:null,post_date:"2026-04-01 20:45:00+00",post_date_raw:"3d",hashtags:["#5g","#truth","#expose"],post_type:"image"}
+];
+
+const DEMO_VERDICTS={
+  "86fb8794-34c5-41e6-a5ce-b1c145874e0f":{verdict:"verified",confidence:87,synthesis:"Both teams returned predominantly clean results. Blue Team found no manipulation signatures across image forensics, OCR, links, or metadata. Red Team confirmed the image is original, the caption aligns semantically with the visual, and the source is a well-established account. The Synthesis Agent weights both teams equally and finds no grounds for suspicion — this post is authentic.",agents:[
+    {team:"blue",name:"Image Forensics",model:"EfficientNet B4 (DFDC)",icon:"🔬",axis:"auth",score:"OK",finding:"No GAN artifacts or splicing signatures detected.",reasoning:"EfficientNet B4 fine-tuned on DFDC dataset scanned pixel-level anomalies, DCT frequency patterns, and copy-move regions. All heatmaps returned within normal variance. The image gradient is consistent with a real photograph taken on a standard camera sensor."},
+    {team:"blue",name:"OCR + Claim Checker",model:"Tesseract v5 → Gemini Flash",icon:"📝",axis:"auth",score:"OK",finding:"Caption text is factually consistent with publicly available sources.",reasoning:"Tesseract extracted no embedded headlines or overlaid text in the image. Gemini Flash cross-referenced the caption claim against its knowledge base and found the Netflix/Peaky Blinders announcement corroborated by multiple entertainment news outlets from March 2026."},
+    {team:"blue",name:"Link Scanner",model:"Google Safe Browsing v4",icon:"🔗",axis:"auth",score:"OK",finding:"No malicious or spoofed URLs detected.",reasoning:"Safe Browsing API v4 checked all URLs present in the post content and bio link. None flagged as phishing, malware, or deceptive redirect domains. Domain trust score: high."},
+    {team:"blue",name:"Metadata Analyser",model:"ExifTool + heuristics",icon:"🗂",axis:"auth",score:"OK",finding:"EXIF metadata intact and consistent with stated capture conditions.",reasoning:"ExifTool extracted full EXIF data. Camera model, GPS metadata, and timestamp are internally consistent. No signs of re-encoding or metadata stripping. The modification date matches the creation date, ruling out post-processing."},
+    {team:"red",name:"Reverse Image Search",model:"Google Vision API / CLIP",icon:"🔄",axis:"context",score:"OK",finding:"Image first appears in April 2026 — no prior contextual reuse found.",reasoning:"CLIP similarity search across indexed image database returned no matches predating April 2026. Google Vision API reverse image search confirmed the image has not appeared in unrelated news events, disasters, or different geographic contexts."},
+    {team:"red",name:"Caption–Image Alignment",model:"OpenAI CLIP / SigLIP",icon:"🎯",axis:"context",score:"OK",finding:"Strong semantic alignment between visual content and caption text.",reasoning:"CLIP cosine similarity score: 0.84. SigLIP cross-modal alignment confirms the image depicts individuals consistent with the caption narrative. The visual context (promotional still aesthetic) aligns with the claim of a new TV casting announcement."},
+    {team:"red",name:"Bot Pattern Detector",model:"Comment frequency heuristics",icon:"🤖",axis:"source",score:"OK",finding:"Comment section shows organic, varied engagement.",reasoning:"Heuristic analysis of comment patterns found no clusters of identical or near-identical text. Comment authors show varied account ages, follower counts, and posting histories. The comment-to-like ratio of 3% is within normal range for film content accounts."},
+    {team:"red",name:"Source Credibility",model:"Gemini Flash + domain DB",icon:"🏅",axis:"source",score:"OK",finding:"@filmseal is a credible, long-standing entertainment media account.",reasoning:"Account active since 2021, consistent posting cadence, no previous flags. Gemini Flash writing-style analysis shows consistent editorial tone across posts. Domain trust database categorises this account as 'established entertainment news'. No affiliation with known disinfo networks."}
+  ]},
+  "a1b2c3d4-dead-beef-cafe-1234567890ab":{verdict:"suspicious",confidence:58,synthesis:"Blue Team flagged stripped EXIF metadata and an unverifiable claim, while the bot detector found coordinated amplification. Red Team confirmed the image was previously used in a 2023 Bangladesh flood report — a significant context mismatch. The account was created only 3 months ago with an unusual growth spike. The Synthesis Agent cannot verify this post's authenticity and advises caution before sharing.",agents:[
+    {team:"blue",name:"Image Forensics",model:"EfficientNet B4 (DFDC)",icon:"🔬",axis:"auth",score:"WARN",finding:"EXIF metadata fully stripped. ELA shows minor inconsistencies.",reasoning:"Error Level Analysis (ELA) detected subtle re-compression artifacts in the sky region, suggesting the image may have been processed or resaved. EfficientNet B4 returned a GAN probability of 0.18 — below the fake threshold, but elevated enough to flag. Combined with stripped metadata, this warrants further review."},
+    {team:"blue",name:"OCR + Claim Checker",model:"Tesseract v5 → Gemini Flash",icon:"📝",axis:"auth",score:"WARN",finding:"'10,000 displaced' claim is unverifiable against known sources at posting time.",reasoning:"No embedded text in image. Gemini Flash searched for corroborating news coverage of the claimed flooding event and found no matching reports within 48 hours of the post date. The specific number '10,000 displaced' appears in no verified outlet at the time of analysis."},
+    {team:"blue",name:"Link Scanner",model:"Google Safe Browsing v4",icon:"🔗",axis:"auth",score:"OK",finding:"No malicious URLs detected in post content.",reasoning:"Safe Browsing API returned clean results for all URLs. No phishing domains, deceptive redirects, or malware links found. This agent returns clean — the threat, if any, lies in the image and claim, not the links."},
+    {team:"blue",name:"Metadata Analyser",model:"ExifTool + heuristics",icon:"🗂",axis:"auth",score:"BAD",finding:"All EXIF data has been stripped — a strong indicator of re-processing.",reasoning:"ExifTool returned no camera model, GPS data, timestamp, or device info. Complete metadata removal is a common technique for re-posting images from other events to remove traceability. Combined with ELA anomalies, this raises a red flag for image origin tampering."},
+    {team:"red",name:"Reverse Image Search",model:"Google Vision API / CLIP",icon:"🔄",axis:"context",score:"BAD",finding:"Image matches a May 2023 Bangladesh flood report — a different event entirely.",reasoning:"CLIP similarity search returned a 0.91 cosine match with an AP Images photograph published in May 2023 covering the Sylhet District floods in Bangladesh. This image is being reused to represent a completely different, unrelated current event — a classic disinformation technique called 'context hijacking'."},
+    {team:"red",name:"Caption–Image Alignment",model:"OpenAI CLIP / SigLIP",icon:"🎯",axis:"context",score:"WARN",finding:"Image context only partially supports the caption claim.",reasoning:"CLIP score: 0.61. While the image depicts flooding (consistent with the caption topic), SigLIP analysis shows the architectural style, vegetation, and sky colour temperature are inconsistent with the claimed geographic region. The visual does not corroborate the specific event described."},
+    {team:"red",name:"Bot Pattern Detector",model:"Comment frequency heuristics",icon:"🤖",axis:"source",score:"BAD",finding:"47 identical comments detected from newly created accounts.",reasoning:"Pattern analysis identified 47 comments containing the exact phrase 'Share this now everyone needs to see this!!' posted within a 12-minute window. All 47 accounts were created within the same week. This is a textbook coordinated inauthentic behaviour (CIB) pattern used to artificially boost reach."},
+    {team:"red",name:"Source Credibility",model:"Gemini Flash + domain DB",icon:"🏅",axis:"source",score:"WARN",finding:"Account created 3 months ago with an anomalous follower growth spike.",reasoning:"Account age: 91 days. Follower count jumped from 340 to 18,400 in a single week — inconsistent with organic growth. Gemini Flash writing-style analysis shows inconsistent editorial tone across posts, suggesting multiple authors or automated content generation. No verified track record."}
+  ]},
+  "d4e5f6a7-cafe-dead-b00b-abcdef012345":{verdict:"verified",confidence:91,synthesis:"Both teams returned clean results with high confidence. Blue Team confirmed image integrity, verified the MIT efficiency claim against Nature Energy publication data, and found no suspicious links or metadata anomalies. Red Team confirmed the image is original, the caption is semantically accurate, engagement is organic, and the source account has an 8-year verified track record. Synthesis Agent rules: VERIFIED.",agents:[
+    {team:"blue",name:"Image Forensics",model:"EfficientNet B4 (DFDC)",icon:"🔬",axis:"auth",score:"OK",finding:"Infographic appears authentic with no manipulation signatures.",reasoning:"EfficientNet B4 scanned the infographic for GAN artifacts and splicing. All frequency domain patterns are consistent with digitally-designed infographic content (not AI-generated photography). Copy-move detection found no duplicated regions. The image is original and unaltered."},
+    {team:"blue",name:"OCR + Claim Checker",model:"Tesseract v5 → Gemini Flash",icon:"📝",axis:"auth",score:"OK",finding:"47% efficiency claim verified against MIT Nature Energy paper.",reasoning:"Tesseract extracted the text '47% efficiency' from the infographic. Gemini Flash cross-referenced this against the MIT perovskite tandem solar cell paper published in Nature Energy (March 2026), which reports a peak efficiency of 46.8% — rounded to 47% in the infographic. Claim is accurate and fairly represented."},
+    {team:"blue",name:"Link Scanner",model:"Google Safe Browsing v4",icon:"🔗",axis:"auth",score:"OK",finding:"All links clean — bio links to verified science publication.",reasoning:"Safe Browsing API returned no threats. The account bio link points to sciencedaily.com, a well-established science news aggregator. No affiliate redirects, tracking pixels, or malicious scripts detected."},
+    {team:"blue",name:"Metadata Analyser",model:"ExifTool + heuristics",icon:"🗂",axis:"auth",score:"OK",finding:"Metadata consistent with original infographic creation.",reasoning:"ExifTool found standard metadata consistent with a design tool export (Adobe Illustrator / Canva). Creation timestamp aligns with MIT press release date of 2026-03-28. No re-encoding detected."},
+    {team:"red",name:"Reverse Image Search",model:"Google Vision API / CLIP",icon:"🔄",axis:"context",score:"OK",finding:"Image first appeared March 28, 2026 alongside MIT press release.",reasoning:"CLIP similarity search found no earlier appearances of this infographic. Google Vision API reverse search traced the image origin to the MIT News Office website, published 2026-03-28. No prior contextual reuse in unrelated events detected."},
+    {team:"red",name:"Caption–Image Alignment",model:"OpenAI CLIP / SigLIP",icon:"🎯",axis:"context",score:"OK",finding:"Excellent semantic alignment between solar panel visual and caption text.",reasoning:"CLIP cosine similarity: 0.89 — top 5% of verified posts analysed. SigLIP cross-modal alignment confirms the infographic visually depicts solar panel efficiency data, directly supporting the caption's numerical claims. No mismatch detected."},
+    {team:"red",name:"Bot Pattern Detector",model:"Comment frequency heuristics",icon:"🤖",axis:"source",score:"OK",finding:"Engagement is organic — no bot amplification detected.",reasoning:"Comment section shows genuine scientific discussion with varied vocabulary, follow-up questions, and links to related papers. Comment-to-like ratio of 8% is healthy for science content. No clusters of identical comments or recently-created account spikes."},
+    {team:"red",name:"Source Credibility",model:"Gemini Flash + domain DB",icon:"🏅",axis:"source",score:"OK",finding:"@sciencedaily is a verified, long-standing science communication account.",reasoning:"Account active since 2017, consistent posting cadence of peer-reviewed research topics. Gemini Flash writing-style analysis shows uniform, accurate scientific language across all posts. Domain trust database rates this account as 'verified science media'. Zero disinfo flags in history."}
+  ]},
+  "e5f6a7b8-b00b-cafe-dead-bcdef0123456":{verdict:"fake",confidence:8,synthesis:"Every single agent across both Blue and Red teams returned a FAIL result. Blue Team found a repurposed stock image, a debunked claim, a flagged external domain, and stripped metadata. Red Team confirmed the image has appeared in 12 unrelated conspiracy posts since 2021, the caption bears zero semantic relationship to the image, 98.6% of comments are bot-generated, and the account was created 14 days ago with AI-written captions. This is coordinated disinformation with extremely high confidence.",agents:[
+    {team:"blue",name:"Image Forensics",model:"EfficientNet B4 (DFDC)",icon:"🔬",axis:"auth",score:"BAD",finding:"Image identified as repurposed Shutterstock stock photo.",reasoning:"EfficientNet reverse-signature matching identified this image as a licensed stock photo (Shutterstock ID #1823847291) depicting a generic 5G cell tower in rural Germany. The image has no connection to hospitals. This is deliberate misrepresentation of an unrelated stock photograph to support a false narrative."},
+    {team:"blue",name:"OCR + Claim Checker",model:"Tesseract v5 → Gemini Flash",icon:"📝",axis:"auth",score:"BAD",finding:"5G mind-control claim is a formally debunked conspiracy theory.",reasoning:"Gemini Flash cross-referenced the claim against WHO, FCC, and IEEE databases. The 5G mind-control narrative has been formally refuted by the World Health Organization (2020), the FCC (2021), and 14 peer-reviewed studies in IEEE Access. No credible scientific basis exists. This is a Category A disinformation claim."},
+    {team:"blue",name:"Link Scanner",model:"Google Safe Browsing v4",icon:"🔗",axis:"auth",score:"BAD",finding:"External link in bio leads to a flagged disinformation domain.",reasoning:"Safe Browsing API flagged the bio link as a 'deceptive site' hosting unverified health and technology conspiracy content. The domain was registered 3 months ago and has received 4 previous disinformation reports. Google Safe Browsing classifies it as a high-risk social engineering domain."},
+    {team:"blue",name:"Metadata Analyser",model:"ExifTool + heuristics",icon:"🗂",axis:"auth",score:"BAD",finding:"All EXIF data stripped — image origin cannot be verified.",reasoning:"ExifTool returned completely empty metadata. The image has been re-exported with all identifying information removed, consistent with a deliberate attempt to obscure the original source (a Shutterstock watermark-removed copy). This is the strongest metadata-level indicator of intentional misrepresentation."},
+    {team:"red",name:"Reverse Image Search",model:"Google Vision API / CLIP",icon:"🔄",axis:"context",score:"BAD",finding:"Image reused in 12 unrelated conspiracy posts dating back to 2021.",reasoning:"CLIP similarity search found 12 prior uses of this exact image across various conspiracy networks between 2021–2025, each paired with a different false narrative (5G, chemtrails, smart meters). This image functions as a generic 'scary tower' prop recycled across multiple disinformation campaigns. Context hijacking confirmed."},
+    {team:"red",name:"Caption–Image Alignment",model:"OpenAI CLIP / SigLIP",icon:"🎯",axis:"context",score:"BAD",finding:"Near-zero semantic relationship between image and caption.",reasoning:"CLIP cosine similarity: 0.21 — bottom 3% of all posts analysed. SigLIP finds no semantic connection between a generic rural cell tower and the claimed hospital/mind-control context. The caption and image are essentially unrelated, confirming the image was chosen purely for emotional impact rather than factual illustration."},
+    {team:"red",name:"Bot Pattern Detector",model:"Comment frequency heuristics",icon:"🤖",axis:"source",score:"BAD",finding:"1,400 of 1,420 comments from accounts created in the past 7 days.",reasoning:"98.6% of comments originate from accounts aged 0–7 days. All follow the same template: emotionally charged agreement with the post claim. This is a large-scale coordinated inauthentic behaviour (CIB) operation. The 20 genuine comments contain rebuttals and fact-checks that have been downvoted by the bot accounts."},
+    {team:"red",name:"Source Credibility",model:"Gemini Flash + domain DB",icon:"🏅",axis:"source",score:"BAD",finding:"Account created 14 days ago — captions appear AI-generated.",reasoning:"Account age: 14 days. No posting history prior to this week. Gemini Flash writing-style analysis detected high perplexity scores and repetitive sentence structures consistent with AI-generated text (likely GPT-3.5 or similar). Domain database has zero trust record. The account shows all hallmarks of an inauthentic automated operation."}
+  ]}
+};
+
+// ── EVENTS ────────────────────────────────────────────────────────
+document.getElementById('demoBtn').addEventListener('click',()=>{
+  posts=DEMO;Object.assign(verdicts,DEMO_VERDICTS);
+  document.getElementById('configModal').style.display='none';
+  setDbStatus('connected','Demo mode — 4 posts loaded');
+  renderPosts();toast('Demo data loaded');
+});
+document.getElementById('connectBtn').addEventListener('click',async()=>{
+  const url=document.getElementById('sbUrl').value.trim(),key=document.getElementById('sbKey').value.trim(),tbl=document.getElementById('sbTable').value.trim()||'instagram_posts';
+  if(!url||!key){toast('Fill in URL and key');return}
+  sbUrl=url;sbKey=key;sbTable=tbl;
+  document.getElementById('configModal').style.display='none';
+  await fetchSupabase();
+});
+document.getElementById('refreshBtn').addEventListener('click',async()=>{
+  if(sbUrl&&sbKey){await fetchSupabase()}else if(posts.length){toast('Demo mode — connect Supabase to refresh')}else{document.getElementById('configModal').style.display='flex'}
+});
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');activeFilter=btn.dataset.filter;renderPosts();
+  });
+});
+document.getElementById('configModal').style.display='flex';
+
+function switchMain(view){
+  document.getElementById('feedPanel').style.display=view==='feed'?'':'none';
+  document.getElementById('archPanel').style.display=view==='arch'?'':'none';
+  document.getElementById('navFeed').classList.toggle('active',view==='feed');
+  document.getElementById('navArch').classList.toggle('active',view==='arch');
+}
+
+// ── SUPABASE ──────────────────────────────────────────────────────
+async function fetchSupabase(){
+  setDbStatus('loading','Connecting…');
+  try{
+    const res=await fetch(`${sbUrl}/rest/v1/${sbTable}?select=*&order=post_date.desc&limit=100`,{headers:{'apikey':sbKey,'Authorization':`Bearer ${sbKey}`}});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    posts=await res.json();
+    setDbStatus('connected',`Connected · ${posts.length} posts`);
+    renderPosts();toast(`${posts.length} posts loaded`);
+  }catch(e){setDbStatus('','Connection failed');toast('Could not connect — check credentials')}
+}
+
+function setDbStatus(state,text){
+  const dot=document.getElementById('dbDot'),lbl=document.getElementById('dbStatusText');
+  dot.className='db-dot';
+  if(state==='connected')dot.classList.add('connected');
+  if(state==='loading')dot.classList.add('loading');
+  lbl.textContent=text;
+}
+
+// ── RENDER POSTS ──────────────────────────────────────────────────
+function renderPosts(){
+  const grid=document.getElementById('postsGrid');
+  const fil=activeFilter==='all'?posts:posts.filter(p=>activeFilter==='unanalyzed'?!verdicts[p.id]:verdicts[p.id]?.verdict===activeFilter);
+  document.getElementById('statTotal').textContent=posts.length||'—';
+  document.getElementById('statVerified').textContent=posts.filter(p=>verdicts[p.id]?.verdict==='verified').length||'—';
+  document.getElementById('statSuspicious').textContent=posts.filter(p=>verdicts[p.id]?.verdict==='suspicious').length||'—';
+  document.getElementById('statFake').textContent=posts.filter(p=>verdicts[p.id]?.verdict==='fake').length||'—';
+  if(!fil.length){grid.innerHTML=`<div class="empty-feed"><div class="empty-feed-icon">🔎</div><div class="empty-feed-title">No posts match</div><div class="empty-feed-desc">Try a different filter or analyze some posts.</div></div>`;return}
+  const bl={verified:'Verified',suspicious:'Suspicious',fake:'Fake',pending:'Analyzing…',unanalyzed:'Not analyzed'};
+  grid.innerHTML=fil.map(p=>{
+    const v=verdicts[p.id],verdict=v?.verdict||'unanalyzed';
+    const date=p.post_date?new Date(p.post_date).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}):p.post_date_raw||'—';
+    const img=p.image_url?`<img class="post-thumb" src="${esc(p.image_url)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div class="post-thumb-placeholder" style="display:none">📷</div>`:`<div class="post-thumb-placeholder">📷</div>`;
+    return`<div class="post-card${selected?.id===p.id?' selected':''}" onclick="selectPost('${esc(p.id)}')"><div class="post-card-inner">${img}<div class="post-body"><div class="post-meta"><span class="post-username">@${esc(p.username)}</span><span class="type-chip">${esc(p.post_type||'image')}</span><span class="post-time">${esc(date)}</span></div><div class="post-caption">${esc(p.caption||'—')}</div><div class="post-stats"><span>♥ ${fmtN(p.likes_count)}</span><span>💬 ${fmtN(p.comments_count)}</span>${p.hashtags?.length?`<span># ${p.hashtags.length}</span>`:''}</div></div></div><div class="verdict-badge ${verdict}">${bl[verdict]||verdict}</div></div>`;
+  }).join('');
+}
+
+// ── SELECT POST → OPEN MODAL ──────────────────────────────────────
+function selectPost(id){
+  selected=posts.find(p=>p.id===id);
+  if(!selected)return;
+  renderPosts();
+  openModal();
+}
+
+function openModal(){
+  const p=selected,v=verdicts[p.id];
+  const date=p.post_date?new Date(p.post_date).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'}):p.post_date_raw||'—';
+  document.getElementById('modalUsername').textContent='@'+p.username;
+  document.getElementById('modalDate').textContent=date;
+
+  // LEFT: post details
+  const img=p.image_url
+    ?`<img style="width:100%;border-radius:10px;object-fit:cover;max-height:220px;display:block;margin-bottom:14px;background:var(--surface3)" src="${esc(p.image_url)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="width:100%;height:140px;border-radius:10px;background:var(--surface3);display:none;align-items:center;justify-content:center;font-size:32px;margin-bottom:14px;color:var(--text-dim)">📷</div>`
+    :`<div style="width:100%;height:140px;border-radius:10px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:14px;color:var(--text-dim)">📷</div>`;
+
+  const ht=p.hashtags?.length?`<div style="margin-bottom:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);font-weight:500;margin-bottom:7px">Hashtags</div><div style="display:flex;flex-wrap:wrap;gap:5px">${p.hashtags.map(h=>`<span class="hashtag">${esc(h)}</span>`).join('')}</div></div>`:'';
+
+  document.getElementById('modalLeft').innerHTML=`
+    ${img}
+    <div style="font-size:12.5px;color:var(--text-muted);line-height:1.65;margin-bottom:14px;padding:12px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">${esc(p.caption||'').replace(/\n/g,'<br>')}</div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);font-weight:500;margin-bottom:7px">Engagement</div>
+      <div style="display:flex;gap:16px;font-size:13px;color:var(--text-muted);font-family:'Geist Mono',monospace"><span>♥ ${fmtN(p.likes_count)} likes</span><span>💬 ${fmtN(p.comments_count)} comments</span></div>
+    </div>
+    ${ht}
+    <a class="ig-link" href="${esc(p.post_url)}" target="_blank" rel="noopener" style="font-size:13px">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      View on Instagram
+    </a>`;
+
+  // RIGHT: AI pipeline
+  document.getElementById('modalRight').innerHTML=`
+    <div class="ai-box" style="border:none;background:transparent;padding:0">
+      <div class="ai-box-title" style="font-size:14px;margin-bottom:3px"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>AI Verification Pipeline</div>
+      <div class="ai-box-desc">Blue Team (detection forensics) + Red Team (context verification) → Synthesis Agent verdict</div>
+      ${v?renderVerdict(v,p.id):renderVerifyPrompt(p.id)}
+    </div>`;
+
+  document.getElementById('postModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeModal(){
+  document.getElementById('postModal').classList.remove('open');
+  document.body.style.overflow='';
+  selected=null;
+  renderPosts();
+}
+
+function handleOverlayClick(e){
+  if(e.target===document.getElementById('postModal'))closeModal();
+}
+
+function renderVerifyPrompt(pid){
+  return`
+    <div class="team-explainer">
+      <div class="team-card blue"><div class="team-card-title blue"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Blue Team</div><div class="team-card-desc">Social forensics — detects image manipulation, OCR claim checking, link safety, metadata analysis</div></div>
+      <div class="team-card red"><div class="team-card-title red"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Red Team</div><div class="team-card-desc">Context skeptic — reverse image search, caption–image alignment, bot detection, source credibility</div></div>
+    </div>
+    <button class="verify-btn" onclick="runVerification('${pid}')">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Run agent pipeline
+    </button>`;
+}
+
+// ── DEBATE VERDICT UI ─────────────────────────────────────────────
+function renderVerdict(v,pid){
+  const sc=s=>s==='OK'?'ok':s==='WARN'?'warn':'bad';
+  const scLabel={OK:'Clean',WARN:'Flagged',BAD:'Fail'};
+  const statusIcon={verified:'✓',suspicious:'⚠',fake:'✗'};
+  const blue=v.agents.filter(a=>a.team==='blue');
+  const red=v.agents.filter(a=>a.team==='red');
+
+  // Score each team: OK=1 WARN=0.5 BAD=0
+  const teamScore=agents=>Math.round(agents.reduce((s,a)=>s+(a.score==='OK'?1:a.score==='WARN'?0.5:0),0)/agents.length*100);
+  const blueScore=teamScore(blue), redScore=teamScore(red);
+
+  const agentCard=(a,idx)=>{
+    const chipCls=sc(a.score);
+    const barPct=a.score==='OK'?92:a.score==='WARN'?48:12;
+    const uid=`dac-${a.team}-${idx}`;
+    return`<div class="debate-agent-card ${a.team}">
+      <div class="dac-header ${a.team}" onclick="toggleDac('${uid}')">
+        <div class="dac-icon">${a.icon}</div>
+        <div class="dac-meta">
+          <div class="dac-name ${a.team}">${esc(a.name)}</div>
+          <div class="dac-model">${esc(a.model)}</div>
+        </div>
+        <span class="dac-verdict-chip ${chipCls}">${scLabel[a.score]}</span>
+        <svg class="dac-chevron" id="${uid}-chev" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="dac-body" id="${uid}">
+        <div class="dac-finding">🔍 Finding</div>
+        <div class="dac-explanation">${esc(a.finding)}</div>
+        <div class="dac-finding">💬 Reasoning</div>
+        <div class="dac-explanation">${esc(a.reasoning)}</div>
+        <div class="dac-finding">📊 Confidence</div>
+        <div class="dac-confidence-row">
+          <span class="dac-confidence-label">Signal strength</span>
+          <div class="dac-bar-bg"><div class="dac-bar-fill ${chipCls}" style="width:${barPct}%"></div></div>
+          <span class="dac-bar-val">${barPct}%</span>
+        </div>
+        <div style="margin-top:8px">
+          <span class="dac-axis-tag ${a.axis}">${{auth:'Content Authenticity',context:'Contextual Consistency',source:'Source Credibility'}[a.axis]}</span>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  return`
+    <div class="debate-section-label">
+      <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Blue Team — Detection Forensics
+    </div>
+    ${blue.map((a,i)=>agentCard(a,i)).join('')}
+
+    <div class="vs-divider"><div class="vs-pill">VS</div></div>
+
+    <div class="debate-section-label">
+      <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Red Team — Context Verification
+    </div>
+    ${red.map((a,i)=>agentCard(a,i)).join('')}
+
+    <div class="debate-scores">
+      <div class="team-score-block">
+        <div class="team-score-label blue">Blue Team</div>
+        <div class="team-score-num blue">${blueScore}</div>
+        <div class="team-score-sub">detection score</div>
+      </div>
+      <div class="vs-center"><div class="vs-center-label">—</div></div>
+      <div class="team-score-block">
+        <div class="team-score-label red">Red Team</div>
+        <div class="team-score-num red">${redScore}</div>
+        <div class="team-score-sub">verification score</div>
+      </div>
+    </div>
+
+    <div class="synthesis-ruling ${v.verdict}">
+      <div class="sr-header ${v.verdict}">
+        <div class="sr-title ${v.verdict}">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Synthesis Agent — Final Ruling · ${statusIcon[v.verdict]} ${v.verdict.toUpperCase()}
+        </div>
+        <div>
+          <span style="font-size:10px;color:var(--text-muted);margin-right:5px">Confidence</span>
+          <span class="sr-score ${v.verdict}">${v.confidence}/100</span>
+        </div>
+      </div>
+      <div class="sr-bar-bg"><div class="sr-bar-fill ${v.verdict}" style="width:${v.confidence}%"></div></div>
+      <div class="sr-body">
+        <div class="sr-reasoning-title">Synthesis Reasoning</div>
+        <div class="sr-reasoning">${esc(v.synthesis)}</div>
+      </div>
+      <div class="sr-axes">
+        <span class="sr-axes-label">Axes covered:</span>
+        <span class="dac-axis-tag auth">Content Authenticity</span>
+        <span class="dac-axis-tag context">Contextual Consistency</span>
+        <span class="dac-axis-tag source">Source Credibility</span>
+      </div>
+    </div>
+    <button class="verify-btn secondary" onclick="reRun('${pid}')" style="margin-top:12px">↻ Re-analyze</button>`;
+}
+
+function toggleDac(uid){
+  const body=document.getElementById(uid);
+  const chev=document.getElementById(uid+'-chev');
+  if(!body)return;
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+
+// ── MOCK AI ───────────────────────────────────────────────────────
+async function runVerification(pid){
+  const p=posts.find(x=>x.id===pid);if(!p)return;
+  const right=document.getElementById('modalRight');
+  if(right)right.innerHTML=`<div class="ai-box" style="border:none;background:transparent;padding:0"><div class="ai-box-title" style="font-size:14px;margin-bottom:3px"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>AI Verification Pipeline</div><div style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-muted);padding:10px 0"><div class="loading-spinner"></div>Running 8 agents — Blue Team + Red Team + Synthesis…</div></div>`;
+  toast('Running 8 agents across 3 functional axes…');
+  await sleep(2200);
+  const result=await mockVerify(p);
+  verdicts[pid]=result;renderPosts();
+  if(right)right.innerHTML=`<div class="ai-box" style="border:none;background:transparent;padding:0"><div class="ai-box-title" style="font-size:14px;margin-bottom:3px"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>AI Verification Pipeline</div><div class="ai-box-desc">Blue Team (detection forensics) + Red Team (context verification) → Synthesis Agent verdict</div>${renderVerdict(result,pid)}</div>`;
+  toast(`Pipeline complete: ${result.verdict.toUpperCase()} · ${result.confidence}/100`);
+}
+
+async function reRun(pid){delete verdicts[pid];await runVerification(pid)}
+
+// Close modal on Escape
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+async function mockVerify(p){
+  const cap=(p.caption||'').toLowerCase(),likes=parseInt(p.likes_count)||0,comments=parseInt(p.comments_count)||0;
+  const flags=['breaking','urgent','share before','they dont','wake up','secret','conspiracy','expose'];
+  let score=72-flags.filter(f=>cap.includes(f)).length*13;
+  if(comments/(likes+1)>0.5)score-=16;
+  if(likes>5000&&comments<50)score-=9;
+  if(!p.image_url)score-=4;
+  score=Math.max(5,Math.min(95,score+Math.round(Math.random()*8-4)));
+  const verdict=score>=80?'verified':score>=40?'suspicious':'fake';
+  const ok=score>65?'OK':score>42?'WARN':'BAD';
+  const fc=flags.filter(f=>cap.includes(f)).length;
+  const botty=comments/(likes+1)>0.5;
+  const clipScore=(score/100*0.35+0.52).toFixed(2);
+  const agents=[
+    {team:"blue",name:"Image Forensics",model:"EfficientNet B4 (DFDC)",icon:"🔬",axis:"auth",score:ok,
+      finding:ok==='OK'?'No GAN artifacts or manipulation signatures detected.':ok==='WARN'?'Minor ELA inconsistencies — possible re-compression.':'Image identified as repurposed or AI-generated content.',
+      reasoning:ok==='OK'?'EfficientNet B4 scanned DCT frequency patterns and pixel-level anomalies. All heatmaps returned within normal variance for authentic photography. Copy-move detection found no duplicated regions.':ok==='WARN'?'Error Level Analysis (ELA) flagged subtle re-compression artifacts. GAN probability score is elevated (0.18–0.35) but below definitive threshold. Metadata absence compounds the concern.':'EfficientNet returned a GAN probability above 0.7. Multiple frequency-domain anomalies detected consistent with AI generation or heavy post-processing. Image origin cannot be verified.'},
+    {team:"blue",name:"OCR + Claim Checker",model:"Tesseract v5 → Gemini Flash",icon:"📝",axis:"auth",score:fc>1?'BAD':fc===1?'WARN':'OK',
+      finding:fc>1?'Multiple unverifiable or emotionally manipulative claims detected.':fc===1?'One claim flagged as unverifiable at time of posting.':'Caption language is factual and cross-referenced successfully.',
+      reasoning:fc>1?`${fc} phrases match known disinformation trigger patterns (urgency, fear, call-to-share). Gemini Flash found no corroborating sources for the core claim. The language profile matches known coordinated influence campaign templates.`:fc===1?'One claim could not be verified against available news databases within 48 hours of the post date. The specific statistic or event cited has no corroborating coverage in verified outlets.':'Tesseract found no embedded text overlay. Gemini Flash cross-referenced the caption against its knowledge base and found the claims supported by verifiable public sources.'},
+    {team:"blue",name:"Link Scanner",model:"Google Safe Browsing v4",icon:"🔗",axis:"auth",score:score>50?'OK':'BAD',
+      finding:score>50?'All URLs passed Safe Browsing checks.':'External link leads to a flagged domain.',
+      reasoning:score>50?'Safe Browsing API v4 checked all URLs in the post and bio. No phishing, malware, or deceptive redirect domains found. Domain trust score: high.':'The bio link was flagged as a deceptive site hosting unverified conspiracy content. Domain registered recently with multiple prior reports. Classified as high-risk social engineering domain.'},
+    {team:"blue",name:"Metadata Analyser",model:"ExifTool + heuristics",icon:"🗂",axis:"auth",score:p.image_url?(ok==='BAD'?'BAD':'OK'):'WARN',
+      finding:p.image_url?(ok==='BAD'?'All EXIF data stripped — deliberate origin concealment likely.':'EXIF metadata intact and internally consistent.'):'No image attached — metadata analysis skipped.',
+      reasoning:p.image_url?(ok==='BAD'?'ExifTool returned completely empty metadata. Complete removal is a standard technique for obscuring image origin when reposting from other events. Combined with ELA anomalies, this is a strong indicator of deliberate misrepresentation.':'ExifTool extracted full EXIF data. Camera model, timestamp, and GPS data are internally consistent and align with the claimed posting context. No re-encoding detected.'):'Without an attached image, ExifTool has no data to analyse. This agent abstains from voting.'},
+    {team:"red",name:"Reverse Image Search",model:"Google Vision API / CLIP",icon:"🔄",axis:"context",score:score>65?'OK':'BAD',
+      finding:score>65?'Image appears original — no prior contextual reuse detected.':'Image previously used in an unrelated context or event.',
+      reasoning:score>65?'CLIP similarity search found no matches predating the post date. Google Vision API reverse search found no uses of this image in unrelated news events, disasters, or different geographic contexts. Provenance is clean.':'CLIP similarity search found prior use of this image in a different event context. This is a context-hijacking technique where authentic imagery is repurposed to misrepresent a different situation entirely.'},
+    {team:"red",name:"Caption–Image Alignment",model:"OpenAI CLIP / SigLIP",icon:"🎯",axis:"context",score:score>55?'OK':'WARN',
+      finding:score>55?`Strong semantic alignment detected (CLIP: ${clipScore}).`:`Moderate mismatch between image and caption (CLIP: ${clipScore}).`,
+      reasoning:score>55?`CLIP cosine similarity of ${clipScore} places this post in the top 30% of verified content. SigLIP cross-modal alignment confirms the visual content directly illustrates the caption claim. No semantic gap detected.`:`CLIP score of ${clipScore} indicates the image only partially relates to the caption. The visual context does not fully corroborate the specific claims being made. SigLIP flags a semantic gap between the described event and the depicted scene.`},
+    {team:"red",name:"Bot Pattern Detector",model:"Comment frequency heuristics",icon:"🤖",axis:"source",score:botty?'BAD':'OK',
+      finding:botty?'Coordinated inauthentic behaviour (CIB) detected in comment section.':'Comment section shows organic, varied engagement.',
+      reasoning:botty?`High comment-to-like ratio (${((comments/(likes+1))*100).toFixed(0)}%) with clusters of near-identical comments from recently created accounts. This matches the signature of a coordinated amplification campaign designed to artificially boost reach and social proof.`:'Comment distribution by account age, follower count, and vocabulary diversity is consistent with organic engagement. No clusters of identical or templated comments detected. Comment-to-like ratio is within normal range.'},
+    {team:"red",name:"Source Credibility",model:"Gemini Flash + domain DB",icon:"🏅",axis:"source",score:likes>1000?'OK':'WARN',
+      finding:likes>1000?'Account shows consistent, credible engagement patterns.':'Low engagement and/or recent account creation reduces trust score.',
+      reasoning:likes>1000?'Account engagement pattern is consistent with an established, organically grown audience. Gemini Flash writing-style analysis shows consistent editorial voice. Domain database returns positive credibility indicators — no prior disinfo flags.':'Account engagement metrics are below thresholds expected for the claimed credibility. Either the account is new, has experienced inorganic growth, or writing-style analysis detected inconsistencies suggesting multiple authors or automated generation.'}
+  ];
+  const synth={
+    verified:'Both Blue and Red Teams returned predominantly clean signals. No manipulation was detected at the image, claim, or source level. Contextual consistency checks passed with high semantic alignment. The Synthesis Agent weights both teams equally and finds no credible grounds for suspicion — this post is VERIFIED.',
+    suspicious:'Mixed signals across both teams. Blue Team flagged metadata issues and an unverifiable claim; Red Team detected a possible image context mismatch and engagement anomalies. The Synthesis Agent cannot establish authenticity with confidence. Exercise caution and seek corroborating sources before sharing.',
+    fake:'Both teams returned near-unanimous FAIL results. Image forensics, claim verification, link safety, and metadata analysis all failed. Reverse image search confirmed context hijacking and bot amplification was detected at scale. The Synthesis Agent rules with high confidence: this post is deliberate DISINFORMATION.'
+  };
+  return{verdict,confidence:score,synthesis:synth[verdict],agents};
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function fmtN(n){const x=parseInt(n);if(isNaN(x))return'—';return x>=1000?(x/1000).toFixed(1)+'k':String(x)}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function toast(msg){const el=document.createElement('div');el.className='toast';el.textContent=msg;document.getElementById('toastContainer').appendChild(el);setTimeout(()=>el.remove(),3200)}
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Core dependencies
+groq>=0.12.0
+flask>=3.0.0
+flask-cors>=4.0.0
+Pillow>=10.0.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# Optional — MobileViT classifier (adds ~2GB, skip if you only want the pipeline)
+# Uncomment these to enable the classifier:
+# torch>=2.0.0
+# torchvision>=0.15.0
+# transformers>=4.30.0
