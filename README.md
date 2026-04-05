@@ -63,6 +63,10 @@ graph TD
     O3 --> RF
     O4 --> RF
 
+    RF -->|User / Ground Truth| RL[RL Orchestrator\nFeedback Engine]
+    RL -.->|Rewards / Penalties| CR
+    RL -.->|Logs & Stats| API[Stats API\nrl_logs/]
+
     style BT fill:#B5D4F4,stroke:#185FA5,color:#0C447C
     style B1 fill:#B5D4F4,stroke:#185FA5,color:#0C447C
     style B2 fill:#B5D4F4,stroke:#185FA5,color:#0C447C
@@ -89,6 +93,9 @@ graph TD
     style A fill:#D3D1C7,stroke:#5F5E5A,color:#2C2C2A
     style C fill:#9FE1CB,stroke:#0F6E56,color:#085041
     style B fill:#CECBF6,stroke:#534AB7,color:#3C3489
+    
+    style RL fill:#E8D8F8,stroke:#6434A4,color:#39146B
+    style API fill:#D6EAF8,stroke:#2E86C1,color:#1B4F72
 ```
 
 ## Tech Stack
