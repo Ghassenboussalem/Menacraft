@@ -141,6 +141,44 @@ The model was trained for **10 epochs** and achieved strong convergence, reachin
 
 The model shows no significant overfitting, with validation loss consistently tracking below training loss throughout all epochs.
 
+## 🧠 Reinforcement Learning System
+
+The RL Orchestrator continuously improves bot detection by learning from feedback. When predictions are correct, agent weights are rewarded. When incorrect, they're adjusted to improve future performance.
+
+### Quick Start
+
+1. **Run Bot Detection**
+   ```javascript
+   const result = await verifyPostReal(post);
+   // Agents like 'Bot Pattern Detector' will evaluate the account
+   ```
+
+2. **Provide Ground Truth**
+   Instruct the system on real account outcomes:
+   ```bash
+   curl -X POST http://localhost:3001/api/rl-feedback \
+     -H "Content-Type: application/json" \
+     -d '{
+       "username": "suspicious_account",
+       "groundTruth": "bot",
+       "botScore": 85,
+       "classification": "bot"
+     }'
+   ```
+
+3. **Check Progress & Logs**
+   Monitor real-time accuracy, weight adjustments, and logs:
+   ```bash
+   curl http://localhost:3001/api/rl-feedback/stats
+   curl http://localhost:3001/api/rl-feedback/logs/dates
+   ```
+
+### Key Features
+- **✅ Self-Improving**: Accuracy increases with continuous feedback.
+- **✅ Transparent**: All changes and weight adjustments are logged.
+- **✅ Persistent**: Weights (`rl_weights.json`) and logs (`rl_logs/`) survive server restarts.
+- **✅ Adaptive**: The system learns exactly which agents are reliable over time.
+
 ## Getting Started
 
 ### Prerequisites
